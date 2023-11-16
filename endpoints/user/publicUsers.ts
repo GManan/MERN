@@ -41,9 +41,9 @@ export async function createPublicUser(userData: any) {
 export async function updateUserByUserID(userId: string, updatedUserData: Partial<IUser>) {
     logger.info("11111111111111111111111111111111111");
     if (updatedUserData.password) {
-        logger.info("new  password ", updatedUserData.password)
+        console.log("new  password ", updatedUserData.password);
         updatedUserData.password = await hashPassword(updatedUserData.password);
-        logger.info("new hashed password ", updatedUserData.password)
+        console.log("new hashed password ", updatedUserData.password);
     }
     const updatedUser = await User.findOneAndUpdate({ userID: userId }, updatedUserData, { new: true });
     if (!updatedUser) {
