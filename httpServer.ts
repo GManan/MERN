@@ -11,10 +11,11 @@ app.use(express.json());
 
 //create logger instance
 const logger = winston.createLogger({
-    level: 'info',
+    level: 'debug',
     format: winston.format.combine(
         winston.format.timestamp(),
-        winston.format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`)
+        // contextFormatter(),
+        winston.format.printf(info => `${info.timestamp} [${info.level.toUpperCase()}]: ${info.message}`)
     ),
     transports: [
         new winston.transports.Console()
@@ -72,10 +73,15 @@ app.get('/api/publicUsers/:userID', async (request: any, response: any) => {
     const userBody = request.body;
     try {
         if (userID) {
-            logger.info("requested user with user ID: ", JSON.stringify(userID));
             const resp = await getUserByUserID(userID);
             if (resp) {
-                console.log("respons from find by id ", resp);
+                console.log("hhtp server 76 userBody password", userBody.password);
+                console.log("hhtp server 76 userid", userID);
+                logger.info('This is an info message', { file: __filename, line: 10 });
+                logger.info("requested user with user ID http server: ", userID);
+                logger.info("requested userBody with user ID: ", userBody);
+                logger.info("INFO respons from find by id ", resp);
+                console.log("INFO  1111111111respons from find by id ", resp);
                 response.status(200).send(resp);
             } else {
                 response.status(404).send(`NO USER with the ID ${userID}`);
@@ -96,15 +102,17 @@ app.put('/api/publicUsers/:userID', async (request: any, response: any) => {
     const updatedUserData = request.body;
     try {
         if (userID) {
+            console.log("in update. uder id ", userID);
+            console.log("in update. uder updatedUserData ", updatedUserData.password);
             // logger.info("requested user with user ID: ", userID);
-            const user2upd = await updateUserByUserID(userID, updatedUserData);
-            logger.info('user2upd', user2upd);
-            if (user2upd === null) {
-                return response.status(404).send(`User with userId ${userID} does not exists`);
+            const resp = await updateUserByUserID(userID, updatedUserData);
+            if (resp) {
+                console.log("respons from find by id ", resp);
+                // logger.info('user2upd', resp);
+                response.status(200).send(resp);
+            } else {
+                response.status(404).send(`User with userId ${userID} does not exists`);
             }
-
-            response.status(200).send(user2upd);
-
         } else {
             console.log("No user ID provided");
             return response.status(409).send("User ID not provided");
