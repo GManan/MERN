@@ -27,7 +27,7 @@ export async function createPublicUser(userData: any) {
             firstName: userData.firstName,
             lastName: userData.lastName,
             password: hashValue,
-            isAdministrator: userData.isAdministrator
+            isAdministrator: userData.isAdministrator ?? false
         });
 
 
@@ -39,7 +39,12 @@ export async function createPublicUser(userData: any) {
 }
 
 export async function updateUserByUserID(userId: string, updatedUserData: Partial<IUser>) {
-
+    logger.info("11111111111111111111111111111111111");
+    if (updatedUserData.password) {
+        logger.info("new  password ", updatedUserData.password)
+        updatedUserData.password = await hashPassword(updatedUserData.password);
+        logger.info("new hashed password ", updatedUserData.password)
+    }
     const updatedUser = await User.findOneAndUpdate({ userID: userId }, updatedUserData, { new: true });
     if (!updatedUser) {
         logger.error(`User with userID ${userId} does not exist`);
@@ -47,7 +52,6 @@ export async function updateUserByUserID(userId: string, updatedUserData: Partia
     }
     logger.info("updated User ", JSON.stringify(updatedUser));
     return updatedUser
-
 }
 export async function getUserByUserID(userId: string): Promise<IUser | null> {
     return await User.findOne({ userID: userId });
