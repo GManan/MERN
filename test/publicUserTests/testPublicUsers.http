@@ -17,7 +17,7 @@ Content-Type: application/json
 
 // Rufe den User mit UserID admin ab. 
 ###
-GET http://localhost/api/publicUsers/manfred
+GET http://localhost/api/publicUsers/admin
 
 // Lege zweiten User an. Prüfe UserID sowie den Namen, ob die Angaben korrekt sind.
 ###
@@ -35,19 +35,19 @@ Content-Type: application/json
 
 // Ändere beim zweiten User den User-Name. Zur Selektion des Users verwende die userID.
 ###
-PUT http://localhost/api/publicUsers/manfred
+PUT http://localhost/api/publicUsers/second
 Content-Type: application/json
 
 {
     "firstName": "Marina",
-    "lastName": "Sauerbier"
+    "lastName": "Sauerbsssier"
 }
 ###
-PUT http://localhost:80/api/publicUsers/manfred
+PUT http://localhost:80/api/publicUsers/second
 Content-Type: application/json
 
 {   
-    "password" : "asccssssdf"
+    "password" : "125s34"
 }
 
 // Rufe alle User ab. Es sollten 2 User zurückgegeben werden.
@@ -56,4 +56,16 @@ GET http://localhost/api/publicUsers
 
 // Lösche den User mit der User-ID manfred
 ###
-DELETE  http://localhost/api/publicUsers/admin
+DELETE  http://localhost/api/publicUsers/second
+
+###
+POST http://localhost:80/api/publicUsers
+Content-Type: application/json
+
+{
+"userID": "babam",
+"firstName" : "Udo",
+"lastName" : "Meyer",
+"password" : "123",
+"isAdministrator" : true
+}

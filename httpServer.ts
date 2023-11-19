@@ -1,15 +1,16 @@
+import express from 'express';
+import winston from 'winston';
 import { config } from './config';
 import { startDB } from './db/Database';
+import authRouter from './endpoints/authentication/AuthenticationRouter';
 import { createPublicUser, deletePublicUser, getAll, getUserByUserID, updateUserByUserID } from './endpoints/user/publicUsers';
-import winston from 'winston';
-import express from 'express';
-import { IUser } from './endpoints/user/publicUsersModel';
-
-
-const app = express()
+import userRouter from './endpoints/user/userRouter';
+import dgRouter from './endpoints/degreeCourses/degreeCoursesRouter'
+import { User } from './endpoints/user/userModel';
+const app = express();
 app.use(express.json());
 
-//create logger instance
+
 const logger = winston.createLogger({
     level: 'debug',
     format: winston.format.combine(
@@ -24,8 +25,21 @@ const logger = winston.createLogger({
 })
 export default logger;
 
+export async function createDefaultAdminUser() {
+    const adminExists = await User.findOne({ userID: 'admin' });
+    if (!adminExists) {
+        console.log("No admin: creating default one")
+        // Create the default admin user
+        const adminUser = new User({
+            userID: 'admin',
+            password: '123',
+            isAdministrator: true
+        });
 
-
+        await adminUser.save();
+        console.log('Default admin user created successfully');
+    }
+}
 
 //CREATE
 app.post('/api/publicUsers', async (request: any, response: any) => {
@@ -50,20 +64,21 @@ app.post('/api/publicUsers', async (request: any, response: any) => {
 
     }
 });
+
 //READ
 /** Adding the public user endpoint */
 app.get('/api/publicUsers', async (request: any, response: any) => {
-    try {
-        const users: IUser[] = await getAll();
-        logger.info("Users:");
-        users.forEach((user: IUser) => {
-            logger.info(JSON.stringify(user));
-        });
-        response.send(users);
-    } catch (error) {
-        logger.error("Error:", error);
-        response.status(500).send('Internal Server Error');
-    }
+
+    getAll().then(
+        resp => {
+            console.log("resp ", resp);
+            response.status(200).send(resp);
+        },
+        error => {
+            console.log("error catching here ", error);
+            response.status(500).send('Internal Server Error');
+        }
+    )
 });
 
 //READ
@@ -75,13 +90,7 @@ app.get('/api/publicUsers/:userID', async (request: any, response: any) => {
         if (userID) {
             const resp = await getUserByUserID(userID);
             if (resp) {
-                console.log("hhtp server 76 userBody password", userBody.password);
-                console.log("hhtp server 76 userid", userID);
-                logger.info('This is an info message', { file: __filename, line: 10 });
-                logger.info("requested user with user ID http server: ", userID);
-                logger.info("requested userBody with user ID: ", userBody);
-                logger.info("INFO respons from find by id ", resp);
-                console.log("INFO  1111111111respons from find by id ", resp);
+
                 response.status(200).send(resp);
             } else {
                 response.status(404).send(`NO USER with the ID ${userID}`);
@@ -96,15 +105,18 @@ app.get('/api/publicUsers/:userID', async (request: any, response: any) => {
         response.status(500).send("Internal Server Error");
     }
 })
+
 //UPDATE
 app.put('/api/publicUsers/:userID', async (request: any, response: any) => {
     const userID = request.params.userID;
     const updatedUserData = request.body;
     try {
         if (userID) {
-            console.log("in update. uder id ", userID);
-            console.log("in update. uder updatedUserData ", updatedUserData.password);
+            // console.log("in update. uder id ", userID);
+            // console.log("in update. uder updatedUserData ", updatedUserData.password);
             // logger.info("requested user with user ID: ", userID);
+
+
             const resp = await updateUserByUserID(userID, updatedUserData);
             if (resp) {
                 console.log("respons from find by id ", resp);
@@ -146,11 +158,35 @@ app.delete('/api/publicUsers/:userID', async (request: any, response: any) => {
     }
 })
 
+//middleware
+
+
+app.use('/api/authenticate', authRouter)
+// Route handling
+app.get('/api/authenticate', (req, res) => {
+    console.log("header ", res.getHeaders())
+    console.log("req.headers.authorization ", req.headers.authorization);
+    res.send('LOGGED IN');
+});
+app.post('/api/authenticate', (req, res) => {
+    console.log("req.headers.authorization ", req.headers.authorization);
+    res.send('Hello, this is a POST request to api/authenticate');
+});
+app.use("/api/users", userRouter);
+app.use('/api/degreeCourses', dgRouter)
+createDefaultAdminUser();
 // linke the app to the port
 const port = config.port
 app.listen(port, () => {
     console.log(`Server up and listening on port ${port}`)
 })
 
+
+const errConst = {
+    'VALIDATION_ERROR': 'ValidationError'
+}
 //start the database
 startDB()
+
+
+// module.exports = app;

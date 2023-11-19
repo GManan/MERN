@@ -1,5 +1,5 @@
 import express from 'express'
-import { IUser, User } from './publicUsersModel';
+import { IUser, User } from './userModel';
 import logger from '../../httpServer';
 import bcrypt from 'bcryptjs';
 const router = express.Router();
@@ -21,13 +21,13 @@ export async function createPublicUser(userData: any) {
         }
 
         //hash the password
-        const hashValue = await hashPassword(userData.password);
+        // const hashValue = await hashPassword(userData.password);
         const user = new User({
             userID: userData.userID,
             firstName: userData.firstName,
             lastName: userData.lastName,
-            password: hashValue,
-            isAdministrator: userData.isAdministrator ?? false
+            password: userData.password,
+            isAdministrator: userData.isAdministrator
         });
 
 
@@ -38,24 +38,35 @@ export async function createPublicUser(userData: any) {
     }
 }
 
-export async function updateUserByUserID(userId: string, updatedUserData: Partial<IUser>) {
-    logger.info("11111111111111111111111111111111111");
-    if (updatedUserData.password) {
-        console.log("new  password ", updatedUserData.password);
-        updatedUserData.password = await hashPassword(updatedUserData.password);
-        console.log("new hashed password ", updatedUserData.password);
-    }
-    const updatedUser = await User.findOneAndUpdate({ userID: userId }, updatedUserData, { new: true });
-    if (!updatedUser) {
-        logger.error(`User with userID ${userId} does not exist`);
-        return null;
-    }
-    logger.info("updated User ", JSON.stringify(updatedUser));
-    return updatedUser
-}
+
 export async function getUserByUserID(userId: string): Promise<IUser | null> {
     return await User.findOne({ userID: userId });
 }
+
+export async function updateUserByUserID(userId: string, updatedUserData: IUser) {
+    console.log("updateUserByUserID CALLED", updatedUserData);
+    const candidatePassword = updatedUserData.password;
+    // Check if user exists
+    const existingUser = await User.findOne({ userID: userId });
+    console.log("user id ", userId);
+    console.log("existingUser ", existingUser);
+
+    if (existingUser == null) {
+        logger.error(`User with userID ${userId} does not exist`);
+        return null;
+    }
+    // Check if updatedUserData has a password
+    if (candidatePassword) {
+        updatedUserData.password = await hashPassword(candidatePassword);
+
+    }
+
+    const updatedUser = await User.findOneAndUpdate({ userID: userId }, updatedUserData, { new: true })
+    console.log(`User with userID ${userId} updated successfully`);
+    return updatedUser;
+}
+
+
 
 export async function deletePublicUser(userId: string) {
     const user = await User.findOne({ userID: userId });
