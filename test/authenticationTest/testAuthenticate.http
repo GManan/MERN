@@ -60,7 +60,7 @@ Authorization: {{adminToken}}
 
 {
     "firstName": "Sandra",
-    "lastName": "mNANA"
+    "lastName": "<uzu>"
 }
 
 // Login mit Basic Authentication als manfred mit korrekten Credentials
@@ -87,12 +87,13 @@ Authorization: {{adminToken}}
 Content-Type: application/json
 
 {
+    "id":"test5id35",
     "universityName": "Beuth Hochschule für Technik Berlin",
-    "universityShortName": "Beuth HS",
-    "departmentName": "Informatik und Medien",
-    "departmentShortName": "FB VI",
+    "universityShortName": "HTW",
+    "departmentName": "Inforsssmatik und Medien",
+    "departmentShortName": "TEST",
     "name": "Orchideenzucht Bachelor",
-    "shortName": "OZ-BA"
+    "shortName": "EPH"
 }
 
 ###
@@ -103,17 +104,17 @@ http://localhost/api/degreeCourses
 Authorization: {{adminToken}}
 
 ### Abrufen von dem angelegten Studiengang
-http://localhost/api/degreeCourses/{{degreeCourseID}}
+http://localhost/api/degreeCourses/test5id35
 Authorization: {{adminToken}}
 
 
 ### Ändere den Namen des Studiengangs
-PUT http://localhost/api/degreeCourses/{{degreeCourseID}}
+PUT http://localhost/api/degreeCourses/test5id35
 Authorization: {{adminToken}}
 Content-Type: application/json
 
 {
-    "name": "Tulpenzucht"
+    "name": "Tulpssssenzucht"
 }
 
 ### Auflisten der Studiengänge einer bestimmten Hochschule
@@ -125,6 +126,6 @@ DELETE http://localhost/api/degreeCourses/{{degreeCourseID}}
 Authorization: {{adminToken}}
 
 ### Lösche den User manfred
-DELETE http://localhost/api/users/manfred
+DELETE http://localhost/api/users/manan
 Authorization: {{adminToken}}
 http://

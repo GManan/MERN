@@ -16,8 +16,8 @@ router.get('/', async (req: Request, res: Response) => {
         //     // res.status(200).json(courses);
         //     // todo implement queryparam filtering
         // }
-
-        const courses = await DegreeCourseService.getAllDegreeCourses();
+        const queryparams = {};
+        const courses = await DegreeCourseService.getAllDegreeCourses(queryparams);
         res.status(200).json(courses);
     } catch (error) {
         console.error('Error getting degree courses:', error);
@@ -27,9 +27,12 @@ router.get('/', async (req: Request, res: Response) => {
 
 // READ ONE
 router.get('/:id', async (req: Request, res: Response) => {
-    const id = req.body.id;
+    const id = req.params.id;
+    console.log("id ", id)
+
     try {
         const course = await DegreeCourseService.getDegreeCourseById(id);
+        console.log("course ", course);
         if (course) {
             res.json(course);
         } else {
@@ -59,27 +62,31 @@ router.post('/', async (req: Request, res: Response) => {
 
             if (isAdmin) {
                 // Create the new user
-                const createdCourse = await DegreeCourseService.createDegreeCourse(newCourse);
-                if (createdCourse) {
-                    res.status(201).json({ message: 'Degree course created successfully' });
-                } else {
-                    res.status(400).json({ error: 'Failed to create degree course' });
+                // const createdCourse = await DegreeCourseService.createDegreeCourse(newCourse);
+                const createDegRes = await DegreeCourseService.createDegreeCourse(newCourse);
+                // console.log("created COURSE ", createDegRes);
+                console.log("createDegRes ", createDegRes);
+                if (createDegRes.existingCourse) {
+
+                    res.status(409).send(createDegRes.createdCourse);
+                } else if (createDegRes.createdCourse) {
+                    res.status(200).send(createDegRes.createdCourse)
                 }
-                res.status(400).json({ message: 'User creation failed' });
             }
-        } else {
-            res.status(401).send("Only administrators can create users");
+            else {
+                res.status(401).send("Only administrators can create users");
+            }
         }
     }
     catch (error) {
         console.error('Error creating degree course:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(409).json("no auth");
     }
 });
 
 //UPDATE 
 router.put('/:id', async (req: Request, res: Response) => {
-    const id = req.body.id;
+    const id = req.params.id;
     const updatedCourse = req.body;
     try {
         if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
@@ -115,7 +122,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 
 // DELETE BY ID
 router.delete('/:id', async (req: Request, res: Response) => {
-    const id = req.body.id;
+    const id = req.params.id;
     try {
         if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
             const userData = req.body;
