@@ -1,8 +1,9 @@
 // degreeCourse.service.ts
 import { IDegreeCourse, DegreeCourse } from './degreeCoursesModel';
 
-export async function getAllDegreeCourses(queryparam: {}): Promise<IDegreeCourse[]> {
-    return await DegreeCourse.find();
+export async function getAllDegreeCourses(queryparam?: any): Promise<IDegreeCourse[]> {
+    console.log("FILTER ", queryparam);
+    return await DegreeCourse.find(queryparam);
 }
 
 export async function createDegreeCourse(degreeCourseData: any): Promise<{ createdCourse: IDegreeCourse | null, existingCourse: IDegreeCourse | null, message?: string }> {

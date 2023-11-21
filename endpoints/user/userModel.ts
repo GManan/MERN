@@ -1,6 +1,6 @@
 // import { Schema, model } from 'mongoose';
-import bcrypt, { genSaltSync } from 'bcryptjs';
-import { Query, Schema, model, Document, QueryWithHelpers } from 'mongoose';
+import bcrypt from 'bcryptjs';
+import { Document, Schema, model } from 'mongoose';
 
 // 1. Create an interface representing a document in MongoDB.
 export interface IUser extends Document {
