@@ -7,8 +7,7 @@ const router = express.Router();
 
 // READ ALL
 router.get('/', async (req: Request, res: Response) => {
-    const filters: Record<string, any> = req.query;
-    console.log("filters ", filters);
+    const filters = req.query;
     try {
         // if (Object.keys(filters).length > 0) {
 
@@ -16,8 +15,15 @@ router.get('/', async (req: Request, res: Response) => {
         //     // res.status(200).json(courses);
         //     // todo implement queryparam filtering
         // }
-        const queryparams = {};
-        const courses = await DegreeCourseService.getAllDegreeCourses(queryparams);
+        if (filters) {
+            console.log("query.term ", filters);
+
+        } else {
+
+            // courses.filter()
+        }
+        console.log("filters in getuser ", filters);
+        const courses = await DegreeCourseService.getAllDegreeCourses(filters);
         res.status(200).json(courses);
     } catch (error) {
         console.error('Error getting degree courses:', error);
@@ -134,7 +140,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
             (req as any).decodedUser = decoded;
             const isAdmin = await authService.verifyRights(decoded.username);
             console.log(" ADMIN ", isAdmin);
-            // Check if the decoded user has admin rights
+            // Check if the decoded user has admin  rights
 
             if (isAdmin) {
                 const success = await DegreeCourseService.deleteDegreeCourseById(id);
