@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { response } from 'express';
 import { authService } from '../authentication/authService';
 import { createPublicUser, deletePublicUser, getAll, getUserByUserID, updateUserByUserID } from './publicUsers';
 import { IUser } from './userModel';
@@ -32,7 +32,7 @@ userRouter.get('/', async (req, res) => {
             )
         }
         else {
-            res.status(401).send(" Can't see all the users, only yourself ma'am ")
+            res.status(401).send(" no access to user data")
         }
         // next();
     } else {
@@ -59,40 +59,50 @@ userRouter.get('/:userID', async (req, res) => {
             if (!(decoded.username == userID)) {
                 res.status(401).send("FAILURE: no rights to do anything here ")
             } else {
+
+                const foundUser = await getUserByUserID(userID);
                 //todo dry this out
-                getUserByUserID(userID).then(
-                    resp => {
-                        console.log("resp ", resp);
-                        res.status(200).send(resp);
-                    },
-                    error => {
-                        console.log("error catching here ", error);
-                        res.status(500).send('Internal Server Error');
-                    }
-                )
+                if (foundUser) {
+                    console.log("resp ", res);
+                    res.status(200).send(res);
+                }
+                else {
+                    console.log("error catching here 1111",);
+                    res.status(404).send('User not found');
+                }
             }
-        } else
-            if (isAdmin) {
-                getUserByUserID(userID).then(
-                    resp => {
-                        console.log("resp ", resp);
-                        res.status(200).send(resp);
-                    },
-                    error => {
-                        console.log("error catching here ", error);
-                        res.status(500).send('Internal Server Error');
-                    }
-                )
+            //             .then(
+            //     resp => {
+            //         console.log("resp ", resp);
+            //         res.status(200).send(resp);
+            //     },
+            //     error => {
+
+            //     }
+            // )
+
+        } else if (isAdmin) {
+            const foundUser = await getUserByUserID(userID);
+            //todo dry this out
+            if (foundUser) {
+                console.log("resp ", foundUser);
+                res.status(200).send(foundUser);
             }
             else {
-
-                res.status(401).send(" Can't see all the users, only yourself ma'am ")
+                res.status(404).send('User not found');
             }
+        }
+        else {
+
+            res.status(401).send("No access to user data")
+        }
         // next();
+
+        //     // next();
     } else {
-        res.status(401).send("FAILURE: no rights to do anything here ")
+
+        res.status(409).json("no Token ")
     }
-    //     // next();
 })
 //CREATE
 userRouter.post("/", async (req, res) => {
@@ -114,16 +124,15 @@ userRouter.post("/", async (req, res) => {
                 // Create the new user
                 const newUser = await createPublicUser(userData);
 
-                if (newUser) {
-                    res.status(201).json({ message: 'User created successfully', user: newUser });
+                if (newUser === null) {
+                    res.status(409).send(`User with userId ${userData.userID} already exists`);
+                    return
                 } else {
-                    res.status(400).json({ message: 'User creation failed' });
+                    res.status(200).send(newUser);
                 }
             } else {
-
+                res.status(401).send("Only administrators can create users");
             }
-        } else {
-            res.status(401).send("Only administrators can create users");
         }
     } catch (error) {
         console.error('Error creating user:', error);
@@ -157,31 +166,30 @@ userRouter.put("/:userID", async (req, res) => {
                         },
                         error => {
                             console.log("error catching here ", error);
-                            res.status(500).send('Internal Server Error');
+                            res.status(404).send('User not found');
                         }
                     )
                 } else {
-                    res.status(401).send("FAILURE: trying to change protected artibutes ")
+                    res.status(401).send("FAILURE: trying to change protected artibute ")
                 }
 
             }
-        } else
-            if (isAdmin) {
-                updateUserByUserID(userID, updatedUserData).then(
-                    resp => {
-                        console.log("resp ", resp);
-                        res.status(200).send(resp);
-                    },
-                    error => {
-                        console.log("error catching here ", error);
-                        res.status(500).send('Internal Server Error');
-                    }
-                )
-            }
-            else {
+        } else if (isAdmin) {
+            updateUserByUserID(userID, updatedUserData).then(
+                resp => {
+                    console.log("resp ", resp);
+                    res.status(200).send(resp);
+                },
+                error => {
+                    console.log("error catching here ", error);
+                    res.status(404).send('User not found');
+                }
+            )
+        }
+        else {
 
-                res.status(401).send(" Can't see all the users, only yourself ma'am ")
-            }
+            res.status(401).send(" no access to user data ")
+        }
         // next();
     } else {
         res.status(401).send("FAILURE: no rights to do anything here ")
