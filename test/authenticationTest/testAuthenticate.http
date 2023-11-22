@@ -56,11 +56,11 @@ Authorization: {{adminToken}}
 ###
 PUT http://localhost/api/users/manfred
 Content-Type: application/json
-Authorization: {{adminToken}}
+Authorization: {{manfredToken}}
 
 {
-    "firstName": "Sandra",
-    "lastName": "babam"
+    "userID": "Sandra",
+    "lastName": "asasa"
 }
 
 // Login mit Basic Authentication als manfred mit korrekten Credentials
@@ -72,7 +72,7 @@ Authorization: Basic manfred:asdf
 @manfredToken = {{loginManfredCorrect.response.headers.Authorization}}
 
 ### Auflisten aller Nutzer mit Token von manfred, das sollte nicht möglich sein
-GET http://localhost/api/users
+GET http://localhost/api/users/admin
 Authorization: {{manfredToken}}
 
 ### Auflisten aller Studiengänge
@@ -87,7 +87,7 @@ Authorization: {{adminToken}}
 Content-Type: application/json
 
 {
-    "id":"tesat5sid3assa5s",
+    "id":"tasnhing",
     "universityName": "Beuth Hochschule für Technik Berlin",
     "universityShortName": "Beuth HS",
     "departmentName": "Inforsssmatik und Medien",
@@ -117,12 +117,12 @@ Content-Type: application/json
     "name": "Tulpenzucht"
 }
 ### Ändere den userdata
-PUT http://localhost/api/users/manfred
+PUT http://localhost/api/users/manand
 Authorization: {{manfredToken}}
 Content-Type: application/json
 
 {
-    "isAdministrator": "True"
+    "firstName":"cccc" 
 }
 
 ### Auflisten der Studiengänge einer bestimmten Hochschule
@@ -131,7 +131,7 @@ Authorization: {{adminToken}}
 
 ### Lösche den angelegten Studiengang
 DELETE http://localhost/api/degreeCourses/{{degreeCourseID}}
-Authorization: {{adminToken}}
+Authorization:{{manfredToken}}
 
 ### Lösche den User manfred
 DELETE http://localhost/api/users/manfred

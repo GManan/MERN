@@ -1,5 +1,5 @@
-import express, { response } from 'express';
-import { authService } from '../authentication/authService';
+import express from 'express';
+import { CustomRequest } from '../../httpServer';
 import { createPublicUser, deletePublicUser, getAll, getUserByUserID, updateUserByUserID } from './publicUsers';
 import { IUser } from './userModel';
 
@@ -7,132 +7,111 @@ const userRouter = express.Router();
 
 
 //READING ALL
-userRouter.get('/', async (req, res) => {
-    console.log("landed here after middleware", req.headers)
+userRouter.get('/api/users', async (req: CustomRequest, res) => {
+    console.log("userRouter.get('/api/users'MIDDLEWARE  ")
+    const token = req.headers.authorization?.split(' ')[1];
+    const isAdmin = req.isAdmin;
+    console.log("isAdmin ", isAdmin);
+    // const userId = req.username;
+    res.setHeader('Authorization', `${token}`);
+    if (isAdmin) {
+        getAll().then(
+            resp => {
+                // console.log("resp ", resp);
+                res.status(200).send(resp);
+            },
+            error => {
+                console.log("error catching here ", error);
+                res.status(500).send('Internal Server Error');
+            }
+        )
+    }
+    else {
+        res.status(401).send("No access to users")
+    }
+    // console.log("landed here after middleware api/users", req.body)
+    // console.log("landed here after middleware api/users", res)
+    // console.log("landed here after middleware api/users", req.userId)
+    // console.log("landed here after middleware api/users", req.headers.isAdmin)
 
     // Check if has token todo: move into a middleware
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-        let reqToken = req.headers.authorization.split(' ')[1];
-        console.log("req Tocken ", reqToken);
-        const decoded = await authService.verifyToken(reqToken);
-        console.log('Decoded Token:', decoded);
-        (req as any).decodedUser = decoded;
-        let isAdmin = await authService.verifyRights(decoded.username)
-        console.log(" ADMIN ", isAdmin);
-        if (isAdmin) {
-            getAll().then(
-                resp => {
-                    console.log("resp ", resp);
-                    res.status(200).send(resp);
-                },
-                error => {
-                    console.log("error catching here ", error);
-                    res.status(500).send('Internal Server Error');
-                }
-            )
-        }
-        else {
-            res.status(401).send(" no access to user data")
-        }
-        // next();
-    } else {
-        res.status(401).send("FAILURE: no rights to do anything here ")
-    }
+    // if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    //     let reqToken = req.headers.authorization.split(' ')[1];
+    //     console.log("req Tocken ", reqToken);
+    //     const decoded = await authService.verifyToken(reqToken);
+    //     console.log('Decoded Token:', decoded);
+    //     (req as any).decodedUser = decoded;
+    //     let isAdmin = await authService.verifyRights(decoded.username)
+    //     console.log(" ADMIN ", isAdmin);
+    //     if (isAdmin) {
+    //         getAll().then(
+    //             resp => {
+    //                 console.log("resp ", resp);
+    //                 res.status(200).send(resp);
+    //             },
+    //             error => {
+    //                 console.log("error catching here ", error);
+    //                 res.status(500).send('Internal Server Error');
+    //             }
+    //         )
+    //     }
+    //     else {
+    //         res.status(401).send(" no access to user data")
+    //     }
+    //     // next();
+    // } else {
+    //     res.status(401).send("FAILURE: no rights to do anything here ")
+    // }
     //     // next();
 })
+
 //READING one user
-userRouter.get('/:userID', async (req, res) => {
-    console.log("landed here after middleware", req.headers)
+userRouter.get('/api/users/:userId', async (req: CustomRequest, res) => {
+    console.log("userRouter.get('/api/users/:userId' MIDDLEWARE  ")
+    const token = req.headers.authorization?.split(' ')[1];
+    const isAdmin = req.isAdmin;
+    const username = req.username;
+    const userToFetch = req.params.userId;
 
-    // Check if has token todo: move into a middleware
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-        const userID = req.params.userID;
+    res.setHeader('Authorization', token ? token : 'none');
+    res.setHeader('Username', `${username}`);
+    // Check if the user is an admin or is trying to access their own information
+    if (isAdmin || username === userToFetch) {
+        try {
+            const fetchedUser = await getUserByUserID(userToFetch);
 
-        let reqToken = req.headers.authorization.split(' ')[1];
-        console.log("req Tocken ", reqToken);
-        const decoded = await authService.verifyToken(reqToken);
-        console.log('Decoded Token:', decoded);
-        (req as any).decodedUser = decoded;
-        let isAdmin = await authService.verifyRights(decoded.username)
-        console.log(" ADMIN ", isAdmin);
-        if (!isAdmin) {
-            if (!(decoded.username == userID)) {
-                res.status(401).send("FAILURE: no rights to do anything here ")
+            if (fetchedUser) {
+                res.status(200).json(fetchedUser);
             } else {
-
-                const foundUser = await getUserByUserID(userID);
-                //todo dry this out
-                if (foundUser) {
-                    console.log("resp ", res);
-                    res.status(200).send(res);
-                }
-                else {
-                    console.log("error catching here 1111",);
-                    res.status(404).send('User not found');
-                }
+                res.status(404).json({ Error: "User not found" });
             }
-            //             .then(
-            //     resp => {
-            //         console.log("resp ", resp);
-            //         res.status(200).send(resp);
-            //     },
-            //     error => {
-
-            //     }
-            // )
-
-        } else if (isAdmin) {
-            const foundUser = await getUserByUserID(userID);
-            //todo dry this out
-            if (foundUser) {
-                console.log("resp ", foundUser);
-                res.status(200).send(foundUser);
-            }
-            else {
-                res.status(404).send('User not found');
-            }
+        } catch (error) {
+            console.error("Error fetching user:", error);
+            res.status(500).json({ Error: "Internal Server Error" });
         }
-        else {
-
-            res.status(401).send("No access to user data")
-        }
-        // next();
-
-        //     // next();
     } else {
-
-        res.status(409).json("no Token ")
+        res.status(401).json({ Error: "Not Authorized" });
     }
-})
+});
+
 //CREATE
-userRouter.post("/", async (req, res) => {
+userRouter.post("/api/users", async (req: CustomRequest, res) => {
+    console.log("POST USER ", req.isAdmin)
+    // const token = req.headers.authorization?.split(' ')[1];
+    // const username = req.username;
+    const isAdmin = req.isAdmin;
+    const userData = req.body;
+    if (!isAdmin) {
+        res.status(401).json({ Error: 'Not Authorised to create a user' });
+    }
     try {
-        // Extract user data from the request body
-        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-            const userData = req.body;
-            console.error('Error creating  userData:', userData);
-            let reqToken = req.headers.authorization.split(' ')[1];
-            console.log("req Tocken ", reqToken);
-            const decoded = await authService.verifyToken(reqToken);
-            console.log('Decoded Token:', decoded);
-            (req as any).decodedUser = decoded;
-            const isAdmin = await authService.verifyRights(decoded.username);
-            console.log(" ADMIN ", isAdmin);
-            // Check if the decoded user has admin rights
+        const newUser = await createPublicUser(userData);
+        if (newUser === null) {
+            res.status(409).send(`User with userId ${userData.userID} already exists`);
+            return
+        } else {
 
-            if (isAdmin) {
-                // Create the new user
-                const newUser = await createPublicUser(userData);
-
-                if (newUser === null) {
-                    res.status(409).send(`User with userId ${userData.userID} already exists`);
-                    return
-                } else {
-                    res.status(200).send(newUser);
-                }
-            } else {
-                res.status(401).send("Only administrators can create users");
-            }
+            res.status(200).send(newUser);
         }
     } catch (error) {
         console.error('Error creating user:', error);
@@ -141,99 +120,65 @@ userRouter.post("/", async (req, res) => {
 })
 
 //UPDATE
-userRouter.put("/:userID", async (req, res) => {
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-        const userID = req.params.userID;
-        const updatedUserData = req.body;
-        let reqToken = req.headers.authorization.split(' ')[1];
-        console.log("req Tocken ", reqToken);
-        const decoded = await authService.verifyToken(reqToken);
-        console.log('Decoded Token:', decoded);
-        (req as any).decodedUser = decoded;
-        let isAdmin = await authService.verifyRights(decoded.username)
-        console.log(" ADMIN ", isAdmin);
-        console.log(" updatedUserData", updatedUserData)
-        if (!isAdmin) {
-            if (!(decoded.username == userID)) {
-                res.status(401).send("FAILURE: no rights to do anything here ")
+userRouter.put("/api/users/:userID", async (req: CustomRequest, res) => {
+    console.log("PUT USER ROUTER")
+    const isAdmin = req.isAdmin;
+    const username = req.username;
+    const userToUpd = req.params.userID;
+    const updatedUserData = req.body;
+
+
+    console.log(`is adminf: ${isAdmin} , username : ${username}, user to be upd: ${userToUpd}`)
+
+    if (!isAdmin) {
+        if (!(username == userToUpd)) {
+            res.status(401).json({
+                Error: `no rights to update user ${userToUpd}`
+            })
+        } else {
+            //todo dry this out
+            if (isValidUpdateData(updatedUserData)) {
+                const updatedUser = await updateUserByUserID(userToUpd, updatedUserData);
+                if (!updatedUser) {
+                    return res.status(404).send('User not found');
+                }
+                console.log("resp ", updatedUser);
+                res.status(200).send(updatedUser);
             } else {
-                //todo dry this out
-                if (isValidUpdateData(updatedUserData)) {
-                    updateUserByUserID(userID, updatedUserData).then(
-                        resp => {
-                            console.log("resp ", resp);
-                            res.status(200).send(resp);
-                        },
-                        error => {
-                            console.log("error catching here ", error);
-                            res.status(404).send('User not found');
-                        }
-                    )
-                } else {
-                    res.status(401).send("FAILURE: trying to change protected artibute ")
-                }
-
+                res.status(401).send("FAILURE: trying to change protected artibute ")
             }
-        } else if (isAdmin) {
-            updateUserByUserID(userID, updatedUserData).then(
-                resp => {
-                    console.log("resp ", resp);
-                    res.status(200).send(resp);
-                },
-                error => {
-                    console.log("error catching here ", error);
-                    res.status(404).send('User not found');
-                }
-            )
         }
-        else {
-
-            res.status(401).send(" no access to user data ")
+    } else if (isAdmin) {
+        const updatedUser = await updateUserByUserID(userToUpd, updatedUserData)
+        if (!updatedUser) {
+            return res.status(404).send('User not found');
         }
-        // next();
-    } else {
-        res.status(401).send("FAILURE: no rights to do anything here ")
+        console.log("updatedUser ", updatedUser);
+        res.status(200).send(updatedUser);
     }
+
 })
 //DELETE
-userRouter.delete('/:userID', async (req, res) => {
-    var userId = req.params.userID;
+userRouter.delete('/api/users/:userID', async (req: CustomRequest, res) => {
+    const userId = req.params.userID;
+    const isAdmin = req.isAdmin;
+    if (!isAdmin) {
+        res.send(401).json({ Error: 'NO Authentication' });
+    }
     try {
-        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-            const userData = req.body;
-            console.error('Error creating  userData:', userData);
-            let reqToken = req.headers.authorization.split(' ')[1];
-            console.log("req Tocken ", reqToken);
-            const decoded = await authService.verifyToken(reqToken);
-            console.log('Decoded Token:', decoded);
-            (req as any).decodedUser = decoded;
-            const isAdmin = await authService.verifyRights(decoded.username);
-            console.log(" ADMIN ", isAdmin);
-            // Check if the decoded user has admin rights
-            if (isAdmin) {
-                if (userId) {
-                    console.info("Deleting user with user id: ", userId);
-                    const deletedUser = await deletePublicUser(userId);
-                    if (deletedUser === null) {
-                        return res.status(404).send(`User with userId ${userId} does not exists`);
-                    }
-
-                    res.send(`User with userId ${userId} is deleted`)
-                } else {
-                    return res.status(409).send("No UserId Provided")
-
-                }
-            } else {
-                res.status(401).send("Only administrators can delete users");
-            }
-        } else {
-            res.status(401).send("No Authentication");
+        console.info("Deleting user with user id: ", userId);
+        const deletedUser = await deletePublicUser(userId);
+        if (deletedUser === null) {
+            return res.status(404).send(`User with userId ${userId} does not exists`);
         }
+        res.status(200).send(`User with userId ${userId} is deleted`)
+
     } catch (error) {
         console.error("Error deleting user ", error);
         res.status(500).send("Initial Server Error");
     }
 })
+
 export default userRouter;
 
 

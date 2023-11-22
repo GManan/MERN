@@ -8,7 +8,7 @@ export interface IUser extends Document {
     password: string;
     firstName: string;
     lastName: string;
-    isAdministrator?: boolean;
+    isAdministrator: boolean;
     eMail?: string;
 
     comparePassword(candidatePassword: string, callback: (err: Error | null, isMatch?: boolean) => void): void;

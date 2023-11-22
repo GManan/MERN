@@ -2,11 +2,12 @@ import express from 'express';
 import winston from 'winston';
 import { config } from './config';
 import { startDB } from './db/Database';
-import authRouter from './endpoints/authentication/AuthenticationRouter';
+import authMiddleware from './endpoints/authentication/AuthMiddleware';
 import { createPublicUser, deletePublicUser, getAll, getUserByUserID, updateUserByUserID } from './endpoints/user/publicUsers';
 import userRouter from './endpoints/user/userRouter';
 import dgRouter from './endpoints/degreeCourses/degreeCoursesRouter'
 import { User } from './endpoints/user/userModel';
+
 const app = express();
 app.use(express.json());
 
@@ -24,6 +25,10 @@ const logger = winston.createLogger({
 
 })
 export default logger;
+export interface CustomRequest extends express.Request {
+    isAdmin?: boolean;
+    username?: String
+}
 
 export async function createDefaultAdminUser() {
     const adminExists = await User.findOne({ userID: 'admin' });
@@ -40,7 +45,11 @@ export async function createDefaultAdminUser() {
         console.log('Default admin user created successfully');
     }
 }
+// ###############################################################################################
 
+
+
+// PUBLIC USERTS: not refactoring cz ig we gonna delete it later?
 //CREATE
 app.post('/api/publicUsers', async (request: any, response: any) => {
     var userData = request.body;
@@ -61,7 +70,6 @@ app.post('/api/publicUsers', async (request: any, response: any) => {
     } catch (error) {
         logger.error("Error creating user ", error);
         response.status(500).send("Internal Server Error");
-
     }
 });
 
@@ -112,11 +120,6 @@ app.put('/api/publicUsers/:userID', async (request: any, response: any) => {
     const updatedUserData = request.body;
     try {
         if (userID) {
-            // console.log("in update. uder id ", userID);
-            // console.log("in update. uder updatedUserData ", updatedUserData.password);
-            // logger.info("requested user with user ID: ", userID);
-
-
             const resp = await updateUserByUserID(userID, updatedUserData);
             if (resp) {
                 console.log("respons from find by id ", resp);
@@ -157,24 +160,16 @@ app.delete('/api/publicUsers/:userID', async (request: any, response: any) => {
         response.status(500).send("Initial Server Error");
     }
 })
+// ##############################################################################################
 
-//middleware
+
+app.use(authMiddleware)
+app.use(userRouter);
+app.use(dgRouter)
 
 
-app.use('/api/authenticate', authRouter)
-// Route handling
-app.get('/api/authenticate', (req, res) => {
-    console.log("header ", res.getHeaders())
-    console.log("req.headers.authorization ", req.headers.authorization);
-    res.send('LOGGED IN');
-});
-app.post('/api/authenticate', (req, res) => {
-    console.log("req.headers.authorization ", req.headers.authorization);
-    res.send('Hello, this is a POST request to api/authenticate');
-});
-app.use("/api/users", userRouter);
-app.use('/api/degreeCourses', dgRouter)
 createDefaultAdminUser();
+
 // linke the app to the port
 const port = config.port
 app.listen(port, () => {
@@ -182,9 +177,6 @@ app.listen(port, () => {
 })
 
 
-const errConst = {
-    'VALIDATION_ERROR': 'ValidationError'
-}
 //start the database
 startDB()
 
