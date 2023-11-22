@@ -1,8 +1,6 @@
 // AuthenticationRouter.ts
 import express, { NextFunction } from "express";
 import { authService } from "./authService";
-import { error } from "winston";
-import { CustomRequest } from "../../httpServer";
 const authRouter = express.Router();
 
 // authRouter.get('/api/authenticate', async (req: CustomRequest, res) => {
