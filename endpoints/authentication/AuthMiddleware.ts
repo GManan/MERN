@@ -23,7 +23,6 @@ const authenticateMiddleware = async (req: any, res: any, next: NextFunction) =>
         //add tokcer to the header
         res.setHeader('Authorization', "Bearer " + userToken.token)
         res.setHeader('isAdmin', userToken.isAdmin)
-        console.log('This is a middleware.', res.header);
         res.status(200).send({ success: "Logged in" });
     }
 };
@@ -44,7 +43,7 @@ const authorizationMiddleware = async (req: any, res: any, next: NextFunction) =
             if (user) {
                 req.isAdmin = user.isAdministrator;
                 req.username = user.userID;
-                res.setHeader('Authorization', reqToken);
+                res.setHeader('Authorization', "Bearer " + reqToken);
                 res.setHeader('isAdmin', `${user.isAdministrator}`);
                 res.setHeader('Username', `${user.userID}`);
                 next()

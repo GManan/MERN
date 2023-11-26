@@ -13,7 +13,7 @@ userRouter.get('/api/users', async (req: CustomRequest, res) => {
     const isAdmin = req.isAdmin;
     console.log("isAdmin ", isAdmin);
     // const userId = req.username;
-    res.setHeader('Authorization', `${token}`);
+    res.setHeader('Authorization', `Bearer ${token}`);
     if (isAdmin) {
         getAll().then(
             resp => {
@@ -29,40 +29,7 @@ userRouter.get('/api/users', async (req: CustomRequest, res) => {
     else {
         res.status(401).send("No access to users")
     }
-    // console.log("landed here after middleware api/users", req.body)
-    // console.log("landed here after middleware api/users", res)
-    // console.log("landed here after middleware api/users", req.userId)
-    // console.log("landed here after middleware api/users", req.headers.isAdmin)
 
-    // Check if has token todo: move into a middleware
-    // if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-    //     let reqToken = req.headers.authorization.split(' ')[1];
-    //     console.log("req Tocken ", reqToken);
-    //     const decoded = await authService.verifyToken(reqToken);
-    //     console.log('Decoded Token:', decoded);
-    //     (req as any).decodedUser = decoded;
-    //     let isAdmin = await authService.verifyRights(decoded.username)
-    //     console.log(" ADMIN ", isAdmin);
-    //     if (isAdmin) {
-    //         getAll().then(
-    //             resp => {
-    //                 console.log("resp ", resp);
-    //                 res.status(200).send(resp);
-    //             },
-    //             error => {
-    //                 console.log("error catching here ", error);
-    //                 res.status(500).send('Internal Server Error');
-    //             }
-    //         )
-    //     }
-    //     else {
-    //         res.status(401).send(" no access to user data")
-    //     }
-    //     // next();
-    // } else {
-    //     res.status(401).send("FAILURE: no rights to do anything here ")
-    // }
-    //     // next();
 })
 
 //READING one user
@@ -73,7 +40,7 @@ userRouter.get('/api/users/:userId', async (req: CustomRequest, res) => {
     const username = req.username;
     const userToFetch = req.params.userId;
 
-    res.setHeader('Authorization', token ? token : 'none');
+    res.setHeader('Authorization', token ? `Bearer ${token}` : 'none');
     res.setHeader('Username', `${username}`);
     // Check if the user is an admin or is trying to access their own information
     if (isAdmin || username === userToFetch) {
@@ -81,6 +48,7 @@ userRouter.get('/api/users/:userId', async (req: CustomRequest, res) => {
             const fetchedUser = await getUserByUserID(userToFetch);
 
             if (fetchedUser) {
+
                 res.status(200).json(fetchedUser);
             } else {
                 res.status(404).json({ Error: "User not found" });
@@ -107,7 +75,7 @@ userRouter.post("/api/users", async (req: CustomRequest, res) => {
     try {
         const newUser = await createPublicUser(userData);
         if (newUser === null) {
-            res.status(409).send(`User with userId ${userData.userID} already exists`);
+            res.status(401).json({ Error: `User already exists or  id not provided` });
             return
         } else {
 
@@ -171,14 +139,13 @@ userRouter.delete('/api/users/:userID', async (req: CustomRequest, res) => {
         if (deletedUser === null) {
             return res.status(404).send(`User with userId ${userId} does not exists`);
         }
-        res.status(200).send(`User with userId ${userId} is deleted`)
+        res.status(204).send(`User with userId ${userId} is deleted`)
 
     } catch (error) {
         console.error("Error deleting user ", error);
         res.status(500).send("Initial Server Error");
     }
 })
-
 export default userRouter;
 
 

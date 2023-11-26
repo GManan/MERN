@@ -12,7 +12,7 @@ export async function getAll(): Promise<IUser[]> {
 }
 
 export async function createPublicUser(userData: any) {
-    if (userData) {
+    if (userData && userData.userID) {
         //check if user exists 
         const existingUser = await User.findOne({ userID: userData.userID });
         if (existingUser != null) {
@@ -35,12 +35,16 @@ export async function createPublicUser(userData: any) {
     }
     else {
         console.log("Have no user data")
+        return null;
     }
 }
 
 
 export async function getUserByUserID(userId: string): Promise<IUser | null> {
-    return await User.findOne({ userID: userId });
+
+    const existingUser = await User.findOne({ userID: userId });
+    return existingUser;
+    // return await User.findOne({ userID: userId }).select("-password");
 }
 
 export async function updateUserByUserID(userId: string, updatedUserData: IUser) {

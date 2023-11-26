@@ -10,7 +10,7 @@ export const authService = {
     // Your userService functions and logic
 
     async authenticateAndToken({ userId, password }: { userId: string, password: string }) {
-        const user = await User.findOne({ userID: userId });
+        const user = await User.findOne({ userID: userId }).select("+password");
         if (!user) {
             return null;
         }
@@ -19,7 +19,7 @@ export const authService = {
                 if (err) {
                     console.error(`Error comparing passwords: ${err}`);
                     resolve(null);
-                    return;
+                    // return;
                 }
 
                 console.log("USER FOUND ", user.isAdministrator);
@@ -57,7 +57,7 @@ export const authService = {
         });
     },
     async verifyRightsAdmin(userId: string): Promise<any> {
-        return await User.findOne({ userID: userId })
+        return await User.findOne({ userID: userId }).select(["-password", "_id"]);
 
     }
 }

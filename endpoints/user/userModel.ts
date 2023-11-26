@@ -19,7 +19,8 @@ const userSchema = new Schema<IUser>({
     userID: { type: String, required: true },
     password: {
         type: String,
-        required: true
+        required: true,
+        select: false,
     },
     firstName: String,
     lastName: String,
@@ -31,41 +32,9 @@ const userSchema = new Schema<IUser>({
 });
 userSchema.pre<IUser>('findOneAndUpdate', { document: true, query: false }, function () {
     const docToUpdate = this.model().findOne(this.getChanges())
-    console.log("docToUpdate ", docToUpdate); // The document that `findOneAndUpdate()` will modify
-    // const user = this as IUser;
-
-    // const update: any = this.getUpdate();
-    // console.log("GETUPTADE", update)
-    // if (update && update.password) {
-
-    //     update.password = bcrypt.hashSync(update.password, 10);
-    //     console.log("update.password", update.password);
-    // }
-
+    console.log("docToUpdate ", docToUpdate);
 })
-// })
 
-// 3. Hashing the password with a pre-save hook when created.
-// userSchema.pre<IUser>('findOneAndUpdate', async function (next) {
-//     // console.log("IN pre findOneAndUpdate hook", this);
-//     // const update = this.getUpdate() as Partial<IUser>;
-
-//     const user = this as IUser;
-//     console.log("this v66666666666666666666", user.password)
-//     // if (!user.isModified('password')) {
-//     //     return next();
-//     // }
-//     const query = this; // The query being executed
-//     const filter = query.getFilter(); // The filter used in the query
-
-//     try {
-//         const hashedPassword = await bcrypt.hash(user.password, 10);
-//         user.password = hashedPassword;
-//         next();
-//     } catch (Error: any) {
-//         return next(Error);
-//     }
-// })
 
 userSchema.pre<IUser>('save', async function (next) {
     const user = this as IUser;
