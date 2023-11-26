@@ -6,6 +6,7 @@ import authMiddleware from './endpoints/authentication/AuthMiddleware';
 import { createPublicUser, deletePublicUser, getAll, getUserByUserID, updateUserByUserID } from './endpoints/user/publicUsers';
 import userRouter from './endpoints/user/userRouter';
 import dgRouter from './endpoints/degreeCourses/degreeCoursesRouter'
+// import dgaRouter from './endpoints/degreeCourseApplication/dcaRouter'
 import { User } from './endpoints/user/userModel';
 
 const app = express();
@@ -166,6 +167,7 @@ app.delete('/api/publicUsers/:userID', async (request: any, response: any) => {
 app.use(authMiddleware)
 app.use(userRouter);
 app.use(dgRouter)
+// app.use(dgaRouter)
 
 
 createDefaultAdminUser();
