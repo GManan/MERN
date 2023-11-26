@@ -99,7 +99,7 @@ Authorization: {{adminToken}}
 
 ### Auflisten aller Studienbewerbungen, es sollte noch keine geben
 https://localhost/api/degreeCourseApplications
-Authorization: {{adminToken}}
+# Authorization: {{adminToken}}
 
 // Login mit Basic Authentication als manfred mit korrekten Credentials
 ###

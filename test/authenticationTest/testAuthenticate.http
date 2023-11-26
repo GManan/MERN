@@ -13,7 +13,16 @@ content-Type: application/json
 GET http://localhost/api/authenticate
 # Authorization: Basic YWRtaW46MTIz
 
+###
+POST https://localhost/api/degreeCourseApplications
+Authorization: {{manfredToken}}
+Content-Type: application/json
 
+{
+    "degreeCourseID": "{{degreeCourseID}}",
+    "targetPeriodYear": 2024,
+    "targetPeriodShortName": "WiSe"
+}
 
 // Login mit Basic Authentication als admin mit korrekten Credentials admin:123
 ###
