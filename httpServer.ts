@@ -2,16 +2,23 @@ import express from 'express';
 import winston from 'winston';
 import { config } from './config';
 import { startDB } from './db/Database';
-import authMiddleware from './endpoints/authentication/AuthMiddleware';
+import dgRouter from './endpoints/degreeCourses/degreeCoursesRouter';
+import authMiddleware from './endpoints/middleware/AuthMiddleware';
 import { createPublicUser, deletePublicUser, getAll, getUserByUserID, updateUserByUserID } from './endpoints/user/publicUsers';
 import userRouter from './endpoints/user/userRouter';
-import dgRouter from './endpoints/degreeCourses/degreeCoursesRouter'
 // import dgaRouter from './endpoints/degreeCourseApplication/dcaRouter'
+import dcaRouter from './endpoints/degreeCourseApplication/dcaRouter';
 import { User } from './endpoints/user/userModel';
+import https from 'https';
+import fs from 'fs';
 
+const key = fs.readFileSync('./certificates/key.pem');
+const cert = fs.readFileSync('./certificates/cert.pem');
 const app = express();
 app.use(express.json());
 
+
+const server = https.createServer({ key: key, cert: cert }, app)
 
 const logger = winston.createLogger({
     level: 'debug',
@@ -34,7 +41,7 @@ export interface CustomRequest extends express.Request {
 export async function createDefaultAdminUser() {
     const adminExists = await User.findOne({ userID: 'admin' });
     if (!adminExists) {
-        console.log("No admin: creating default one")
+
         // Create the default admin user
         const adminUser = new User({
             userID: 'admin',
@@ -43,7 +50,7 @@ export async function createDefaultAdminUser() {
         });
 
         await adminUser.save();
-        console.log('Default admin user created successfully');
+
     }
 }
 // ###############################################################################################
@@ -80,11 +87,11 @@ app.get('/api/publicUsers', async (request: any, response: any) => {
 
     getAll().then(
         resp => {
-            console.log("resp ", resp);
+
             response.status(200).send(resp);
         },
         error => {
-            console.log("error catching here ", error);
+
             response.status(500).send('Internal Server Error');
         }
     )
@@ -106,7 +113,7 @@ app.get('/api/publicUsers/:userID', async (request: any, response: any) => {
             }
         }
         else {
-            console.log("No user ID provided");
+
             response.status(400).send("User ID not provided");
         }
     } catch (error) {
@@ -123,14 +130,14 @@ app.put('/api/publicUsers/:userID', async (request: any, response: any) => {
         if (userID) {
             const resp = await updateUserByUserID(userID, updatedUserData);
             if (resp) {
-                console.log("respons from find by id ", resp);
+
                 // logger.info('user2upd', resp);
                 response.status(200).send(resp);
             } else {
                 response.status(404).send(`User with userId ${userID} does not exists`);
             }
         } else {
-            console.log("No user ID provided");
+
             return response.status(409).send("User ID not provided");
         }
     } catch (error) {
@@ -167,17 +174,20 @@ app.delete('/api/publicUsers/:userID', async (request: any, response: any) => {
 app.use(authMiddleware)
 app.use(userRouter);
 app.use(dgRouter)
-// app.use(dgaRouter)
+app.use(dcaRouter)
 
 
 createDefaultAdminUser();
 
 // linke the app to the port
-const port = config.port
-app.listen(port, () => {
-    console.log(`Server up and listening on port ${port}`)
-})
+// const port = config.port
+// app.listen(port, () => {
+//     console.log(`Server up and listening on port ${port}`)
+// })
 
+server.listen(config.httpsPort, () => {
+
+})
 
 //start the database
 startDB()
