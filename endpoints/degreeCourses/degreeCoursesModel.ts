@@ -3,7 +3,7 @@ import { Schema, model, Document } from 'mongoose';
 
 // 1. Create an interface representing a document in MongoDB.
 export interface IDegreeCourse extends Document {
-    id: string;
+    // id: string;
     name: string;
     shortName: string;
     universityName: string;
@@ -14,7 +14,7 @@ export interface IDegreeCourse extends Document {
 
 // 2. Create a Schema corresponding to the document interface.
 const degreeCourseSchema = new Schema<IDegreeCourse>({
-    id: { type: String },
+    // _id: { type: String },
     name: { type: String },
     shortName: { type: String },
     universityName: { type: String },

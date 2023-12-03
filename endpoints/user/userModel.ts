@@ -32,7 +32,7 @@ const userSchema = new Schema<IUser>({
 });
 userSchema.pre<IUser>('findOneAndUpdate', { document: true, query: false }, function () {
     const docToUpdate = this.model().findOne(this.getChanges())
-    console.log("docToUpdate ", docToUpdate);
+
 })
 
 
@@ -46,7 +46,7 @@ userSchema.pre<IUser>('save', async function (next) {
     try {
         const hashedPassword = await bcrypt.hash(user.password, 10);
         user.password = hashedPassword;
-        console.log("securing the password");
+
         next();
     } catch (error: any) {
         return next(error);
