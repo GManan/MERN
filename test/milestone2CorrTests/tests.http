@@ -1,0 +1,163 @@
+#  Test 1: Abrufen der User beim Start über /publicUser
+###
+GET http://localhost/api/publicUsers
+
+###
+# @name loginAdminCorrect
+GET http://localhost:80/api/authenticate
+Authorization: Basic YWRtaW46MTIz
+
+@adminToken = {{loginAdminCorrect.response.headers.Authorization}}
+###
+GET http://localhost:80/api/authenticate
+Authorization: Basic YXNkZjphc2Rm
+
+###
+GET http://localhost:80/api/users
+Authorization: {{adminToken}}
+
+###
+GET http://localhost:80/api/users/admin
+Authorization: {{adminToken}}
+
+###
+POST http://localhost:80/api/users
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+"firstName" : "Udo",
+"lastName" : "Müller",
+"password" : "123",
+"isAdministrator" : true,
+"userID" : "admin"
+}
+
+### 8
+POST http://localhost:80/api/users
+Content-Type: application/json
+
+{
+"firstName" : "Manfred",
+"lastName" : "Mustermann",
+"password" : "asdf",
+"isAdministrator" : false,
+"userID" : "manfred"
+}
+
+### 
+# TEST 9 Zweiten Nutzer mit Token anlegen
+POST http://localhost:80/api/users
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+"firstName" : "Manfred",
+"lastName" : "Mustermann",
+"password" : "asdf",
+"isAdministrator" : false,
+"userID" : "manfred"
+}
+
+### TEST10 : Abrufen des zweiten Users
+GET http://localhost:80/api/users/manfred
+Authorization: {{adminToken}}
+
+
+
+### Test 11: Anlegen von User ohne User-ID
+POST http://localhost:80/api/users
+Authorization:{{adminToken}}
+Content-Type: application/json
+
+{
+"firstName" : "Alonso",
+"lastName" : "Ferari",
+"password" : "as"
+}
+
+### Test 12: Authentication mit dem User Manfred
+# @name loginManfred
+GET http://localhost:80/api/authenticate
+Authorization: Basic bWFuZnJlZDphc2Rm
+
+@ManfredToken = {{loginManfred.response.headers.Authorization}}
+
+###Test 13: Zweiten Nutzer aktualisieren
+PUT http://localhost:80/api/users/manfred
+Authorization: {{ManfredToken}}
+
+### Test 13: Zweiten Nutzer aktualisieren
+PUT http://localhost/api/users/manfred
+Authorization: {{ManfredToken}}
+Content-Type: application/json
+
+{"password" : "aaa"}
+
+### Test 14: Login als manfred mit geänderten Passwort
+GET http://localhost:80/api/authenticate
+Authorization:  Basic bWFuZnJlZDphYWE=
+
+
+###  Test 15: Abrufen der Studiengänge
+GET http://localhost:80/api/degreeCourses
+Authorization: {{adminToken}}
+
+### Test 16: Studiengang ohne Token anlegen
+POST http://localhost:80/api/degreeCourses
+Content-Type: application/json
+
+{
+"universityName" : "Berliner Hochschule für Technik",
+"universityShortName" : "BHT",
+"departmentName" : "Informatik und Medien",
+"departmentShortName" : "FB VI",
+"name" : "Orchideenzucht Bachelor",
+"shortName" : "OZ-BA"
+}
+
+### Test 17: Studiengang mit Token anlegen
+POST http://localhost:80/api/degreeCourses
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+"universityName" : "Berliner Hochschule für Technik",
+"universityShortName" : "BHT",
+"departmentName" : "Informatik und Medien",
+"departmentShortName" : "FB VI",
+"name" : "Orchideenzucht Bachelor",
+"shortName" : "OZ-BA"
+}
+
+//starting fixing from this tests 18-22 ask the prof for the tests
+
+
+
+### Test 22: Abrufen eines nicht-existenten Users
+GET http://localhost:80/api/users/asdfasdf
+Authorization: {{adminToken}}
+
+### Test 23: Löschen des Users manfred ohne Token
+DELETE http://localhost:80/api/users/manfred
+
+### Test 24: Löschen des Users manfred
+DELETE http://localhost:80/api/users/manfred
+Authorization: {{adminToken}}
+
+###  Test 25: Prüfe, ob manfred gelöscht ist
+GET http://localhost:80/api/users/manfred
+Authorization: {{adminToken}}
+
+### Test 26: Löschen eines nicht-existenten Users
+DELETE http://localhost:80/api/users/asdfasdf
+Authorization: {{adminToken}}
+
+### Test 27: Aktualisieren eines nicht-existenten Users
+PUT http://localhost:80/api/users/asdfasdf
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+"password" : "aaa"
+}
