@@ -34,7 +34,7 @@ export async function createPublicUser(userData: any) {
         return await user.save();
     }
     else {
-        console.log("Have no user data")
+
         return null;
     }
 }
@@ -48,12 +48,12 @@ export async function getUserByUserID(userId: string): Promise<IUser | null> {
 }
 
 export async function updateUserByUserID(userId: string, updatedUserData: IUser) {
-    console.log("updateUserByUserID CALLED", updatedUserData);
+
     const candidatePassword = updatedUserData.password;
     // Check if user exists
     const existingUser = await User.findOne({ userID: userId });
-    console.log("user id ", userId);
-    console.log("existingUser ", existingUser);
+
+
 
     if (existingUser == null) {
         logger.error(`User with userID ${userId} does not exist`);
@@ -66,7 +66,7 @@ export async function updateUserByUserID(userId: string, updatedUserData: IUser)
     }
 
     const updatedUser = await User.findOneAndUpdate({ userID: userId }, updatedUserData, { new: true })
-    console.log(`User with userID ${userId} updated successfully`);
+
     return updatedUser;
 }
 

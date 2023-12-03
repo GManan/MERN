@@ -1,14 +1,16 @@
 // AuthenticationRouter.ts
 import express, { NextFunction } from "express";
 import { authService } from "./authService";
+import logger from "../../httpServer";
 const authRouter = express.Router();
 
 // authRouter.get('/api/authenticate', async (req: CustomRequest, res) => {
-const authenticateMiddleware = async (req: any, res: any, next: NextFunction) => {
-    console.log("API/AUTHENTICATE MIDDLEWARE:", req.path);
+const handleAuthenticate = async (req: any, res: any, next: NextFunction) => {
+
+
     //credentials
     if (!req.headers.authorization || !req.headers.authorization.startsWith('Basic ')) {
-        res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+        res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"', 'charSet="UTF-8"');
         res.status(401).json({ message: 'Missing Authorization Header' });
     } else {
 
@@ -18,7 +20,7 @@ const authenticateMiddleware = async (req: any, res: any, next: NextFunction) =>
         const userToken: any = await authService.authenticateAndToken({ userId, password });
 
         if (!userToken) {
-            return res.status(401).json({ Error: 'Failed to create token: Authentication failed' });
+            return res.status(401).json({ Error: 'Invalid authentication credentials' });
         }
         //add tokcer to the header
         res.setHeader('Authorization', "Bearer " + userToken.token)
@@ -27,19 +29,20 @@ const authenticateMiddleware = async (req: any, res: any, next: NextFunction) =>
     }
 };
 // authRouter.get(["/api/users", '/api/users/:userID'], async (req: CustomRequest, res, next) => {
-const authorizationMiddleware = async (req: any, res: any, next: NextFunction) => {
-    console.log("USER MIDDLEWARE", req.headers);
+const handleAuthorization = async (req: any, res: any, next: NextFunction) => {
+    // console.log("USER MIDDLEWARE", req.path);
+    // console.log("USER methods", req.method);
+
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
         const reqToken = req.headers.authorization.split(' ')[1];
-        console.log(" Tocken ", reqToken);
+
         try {
 
             const decoded = await authService.verifyToken(reqToken);
-            console.log("TOKEN PROVIDED")
-            console.log('Decoded Token:', decoded);
-            const user = await authService.verifyRightsAdmin(decoded.userId)
+            logger.info(`TOKEN PROVIDED  ${reqToken}`);
 
-            console.log('USER:', user);
+            const user = await authService.verifyRightsAdmin(decoded.userId)
+            const resource = req.path.split("/")[2];
             if (user) {
                 req.isAdmin = user.isAdministrator;
                 req.username = user.userID;
@@ -48,32 +51,31 @@ const authorizationMiddleware = async (req: any, res: any, next: NextFunction) =
                 res.setHeader('Username', `${user.userID}`);
                 next()
             } else {
-                res.status(409).json({ Error: `No user with id ${decoded.userId}` });
+                res.status(409).json({ Error: `No user with id ${decoded.userId}`, });
             }
         } catch (error) {
-            console.log(" ERROR ", error);
+
             res.status(401).json({ Error: 'Authentication failed' });
         }
 
 
     } else {
-        console.log("NO TOKEN PROVIDED")
-        res.status(401).json({ message: 'NO Authorization Token' });
+
+        res.status(401).json({ error: 'NO Authorization Token' });
     }
 };
 
-authRouter.get('/api/authenticate', authenticateMiddleware)
+authRouter.get('/api/authenticate', handleAuthenticate)
 
-authRouter.get(['/api/users', '/api/users/:userID'], authorizationMiddleware);
-authRouter.post('/api/users', authorizationMiddleware);
-authRouter.put('/api/users/:userId', authorizationMiddleware);
-authRouter.delete('/api/users/:userId', authorizationMiddleware);
+const protectedRoutes = [
+    '/api/users',
+    '/api/users/:userID',
+    '/api/degreeCourses',
+    '/api/degreeCourses/:id',
+    '/api/degreeCourseApplications',
+    '/api/degreeCourseApplications/myApplications'
+];
 
-
-// authRouter.get(['/api/degreeCourses', '/api/degreeCourses/:id'], authorizationMiddleware);
-authRouter.post('/api/degreeCourses', authorizationMiddleware);
-authRouter.put('/api/degreeCourses/:id', authorizationMiddleware);
-authRouter.delete('/api/degreeCourses/:id', authorizationMiddleware);
-
+authRouter.use(protectedRoutes, handleAuthorization);
 
 export = authRouter;

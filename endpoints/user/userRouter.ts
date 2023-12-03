@@ -8,10 +8,10 @@ const userRouter = express.Router();
 
 //READING ALL
 userRouter.get('/api/users', async (req: CustomRequest, res) => {
-    console.log("userRouter.get('/api/users'MIDDLEWARE  ")
+
     const token = req.headers.authorization?.split(' ')[1];
     const isAdmin = req.isAdmin;
-    console.log("isAdmin ", isAdmin);
+
     // const userId = req.username;
     res.setHeader('Authorization', `Bearer ${token}`);
     if (isAdmin) {
@@ -21,7 +21,7 @@ userRouter.get('/api/users', async (req: CustomRequest, res) => {
                 res.status(200).send(resp);
             },
             error => {
-                console.log("error catching here ", error);
+
                 res.status(500).send('Internal Server Error');
             }
         )
@@ -34,7 +34,7 @@ userRouter.get('/api/users', async (req: CustomRequest, res) => {
 
 //READING one user
 userRouter.get('/api/users/:userId', async (req: CustomRequest, res) => {
-    console.log("userRouter.get('/api/users/:userId' MIDDLEWARE  ")
+    // console.log("userRouter.get('/api/users/:userId' MIDDLEWARE  ",req.user.role)
     const token = req.headers.authorization?.split(' ')[1];
     const isAdmin = req.isAdmin;
     const username = req.username;
@@ -54,7 +54,7 @@ userRouter.get('/api/users/:userId', async (req: CustomRequest, res) => {
                 res.status(404).json({ Error: "User not found" });
             }
         } catch (error) {
-            console.error("Error fetching user:", error);
+
             res.status(500).json({ Error: "Internal Server Error" });
         }
     } else {
@@ -64,7 +64,7 @@ userRouter.get('/api/users/:userId', async (req: CustomRequest, res) => {
 
 //CREATE
 userRouter.post("/api/users", async (req: CustomRequest, res) => {
-    console.log("POST USER ", req.isAdmin)
+
     // const token = req.headers.authorization?.split(' ')[1];
     // const username = req.username;
     const isAdmin = req.isAdmin;
@@ -82,21 +82,21 @@ userRouter.post("/api/users", async (req: CustomRequest, res) => {
             res.status(200).send(newUser);
         }
     } catch (error) {
-        console.error('Error creating user:', error);
+
         res.status(500).json({ message: 'Internal server error' });
     }
 })
 
 //UPDATE
 userRouter.put("/api/users/:userID", async (req: CustomRequest, res) => {
-    console.log("PUT USER ROUTER")
+
     const isAdmin = req.isAdmin;
     const username = req.username;
     const userToUpd = req.params.userID;
     const updatedUserData = req.body;
 
 
-    console.log(`is adminf: ${isAdmin} , username : ${username}, user to be upd: ${userToUpd}`)
+
 
     if (!isAdmin) {
         if (!(username == userToUpd)) {
@@ -110,7 +110,7 @@ userRouter.put("/api/users/:userID", async (req: CustomRequest, res) => {
                 if (!updatedUser) {
                     return res.status(404).send('User not found');
                 }
-                console.log("resp ", updatedUser);
+
                 res.status(200).send(updatedUser);
             } else {
                 res.status(401).send("FAILURE: trying to change protected artibute ")
@@ -121,7 +121,7 @@ userRouter.put("/api/users/:userID", async (req: CustomRequest, res) => {
         if (!updatedUser) {
             return res.status(404).send('User not found');
         }
-        console.log("updatedUser ", updatedUser);
+
         res.status(200).send(updatedUser);
     }
 
@@ -142,7 +142,7 @@ userRouter.delete('/api/users/:userID', async (req: CustomRequest, res) => {
         res.status(204).send(`User with userId ${userId} is deleted`)
 
     } catch (error) {
-        console.error("Error deleting user ", error);
+
         res.status(500).send("Initial Server Error");
     }
 })

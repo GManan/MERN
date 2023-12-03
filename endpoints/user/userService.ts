@@ -5,8 +5,8 @@ import jwt from 'jsonwebtoken';
 export const userService = {
     // Your userService functions and logic
     async authenticate({ username, password }: { username: string, password: string }) {
-        console.log("data", username)
-        console.log("data password", password)
+
+
         const user = await User.findOne({ username });
 
         if (!user) {

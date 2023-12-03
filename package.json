@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node httpServer",
     "start nodemon": "nodemon --exec ts-node httpServer.ts ",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --experimental-vm-modules --reporter spec test/auth.test.js"
   },
   "author": "MAGE",
   "license": "ISC",
